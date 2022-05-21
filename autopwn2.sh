@@ -6,9 +6,10 @@ then
 fi
 
 interface="wlan0"
+network_ssid=$(iwgetid -r)
 gateway=$(ip route | grep -v 'default' | awk {'print $1'})
 
-printf "########## Network AutoPWN v1 ##########\nGATEWAY: $gateway\n[*] Mapping network...\n\n"
+printf "########## Network AutoPWN v1 ##########\n[i] Found network SSID: $network_ssid\n[i] Found network gateway: $gateway\n[*] Mapping network...\n\n"
 
 ips=($(nmap -sn  $gateway | awk '/is up/ {print up}; {gsub (/\(|\)/,""); up = $NF}' | sort
 ))
