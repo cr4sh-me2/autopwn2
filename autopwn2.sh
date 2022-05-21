@@ -48,6 +48,10 @@ httpPort=$(nmap -p 80 ${ips[$i]} | grep 80/ | awk '{print $2}')
 
 httpsPort=$(nmap -p 443 ${ips[$i]} | grep 443/ | awk '{print $2}')
 
+ftpPort=$(nmap -p 21 ${ips[$i]} | grep 21/ | awk '{print $2}')
+
+telnetPort=$(nmap -p 23 ${ips[$i]} | grep 23/ | awk '{print $2}')
+
 
     printf "\n[*] Scanning ip ($((i+1))/${#ips[@]}) - ${ips[$i]}\n"
 
@@ -96,6 +100,34 @@ httpsPort=$(nmap -p 443 ${ips[$i]} | grep 443/ | awk '{print $2}')
         printf "HTTPS: \e[91m$httpsPort\e[0m\n"
         httpsCrack=0
     fi
+
+    if [[ $ftpPort == "open" ]] 
+    then
+        printf "FTP: \e[92m$ftpPort\e[0m\n"
+        ftpCrack=1
+    elif [[ $ftpPort == "filtered" ]]
+    then
+        printf "FTP: \e[93m$ftpPort\e[0m\n"
+        ftpCrack=1
+    else
+        printf "FTP: \e[91m$ftpPort\e[0m\n"
+        ftpCrack=0
+    fi
+
+    if [[ $telnetPort == "open" ]] 
+    then
+        printf "TELNET: \e[92m$telnetPort\e[0m\n"
+        telnetCrack=1
+    elif [[ $telnetPort == "filtered" ]]
+    then
+        printf "TELNET: \e[93m$telnetPort\e[0m\n"
+        telnetCrack=1
+    else
+        printf "TELNET: \e[91m$telnetPort\e[0m\n"
+        telnetCrack=0
+    fi
+
+    sleep 0.5
     
     i=$((i+1))
 done
