@@ -25,9 +25,13 @@ Network Exploitation AI v1
 printf "[i] Found network SSID:%s $network_ssid\n"
 printf "[i] Found network gateway:%s $gateway\n"
 printf "[*] Scanning entire network...\n"
+printf "[i] Found localhost: $localhost, whitelisting..."
+
+
 
 # ips=($(nmap -sn  $gateway | awk '/is up/ {print up}; {gsub (/\(|\)/,""); up = $NF}' | sort)) #ips array
 mapfile -t ips < <(nmap -sn "$gateway" | awk '/is up/ {print up}; {gsub (/\(|\)/,""); up = $NF}' | sort)
+ips=(${ips[*]}/$localhost)
 
 # nmap -vv $ips[$i] | grep "Discovered open port" | awk {'print $6":"$4'} | awk -F/ {'print $1'} 
 
