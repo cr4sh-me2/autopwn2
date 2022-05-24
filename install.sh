@@ -37,6 +37,6 @@ then
    chmod +x Mikrotik-WinBox-Exploit/*
 fi
 
-chmod +x autopwn-test.sh
+chmod +x autopwn2-test.sh
 
 printf "\n[i] Installation done!\n"
