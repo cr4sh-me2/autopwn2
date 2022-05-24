@@ -34,6 +34,7 @@ command -v python3 >/dev/null 2>&1 || { printf >&2 "%s$info"; apt-get install py
 
 git clone https://github.com/dharmitviradia/Mikrotik-WinBox-Exploit
 chmod +x Mikrotik-WinBox-Exploit/*
+chmod +x autopwn-test.sh
 
 
 printf "\n[i] Installation done!\n"
